@@ -1,0 +1,8 @@
+{
+    "name": "infra-cdk",
+    "version": "0.1.0",
+    "dependencies": {
+        "aws-cdk-lib": "^2.96.0",
+        "constructs": "^10.1.169"
+    }
+}

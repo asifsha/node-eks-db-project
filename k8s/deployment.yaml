@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-api
+  template:
+    metadata:
+      labels:
+        app: node-api
+    spec:
+      containers:
+      - name: node-api
+        image: 593793022168.dkr.ecr.ap-southeast-2.amazonaws.com/node-api:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: TABLE_NAME
+          value: "ItemsTable"
+        - name: AWS_REGION
+          value: "ap-southeast-2"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 20

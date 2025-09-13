@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::412381746256:role/githubAccessECRECSRole # optional
+          aws-region: ap-southeast-2
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, push image
+        env:
+          ECR_REPO: ${{ steps.login-ecr.outputs.registry }}/node-api
+        run: |
+          docker build -t node-api:latest .
+          docker tag node-api:latest $ECR_REPO:latest
+          docker push $ECR_REPO:latest
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name $(aws eks list-clusters --region ap-southeast-2 --query "clusters[0]" --output text) --region ap-southeast-2
+
+      - name: Set deployment image
+        run: |
+          kubectl set image deployment/node-api node-api=${{ steps.login-ecr.outputs.registry }}/node-api:latest --record || kubectl apply -f k8s/deployment.yaml
+
+      - name: Apply service
+        run: kubectl apply -f k8s/service.yaml
