@@ -1,1 +1,32 @@
 /a.md
+# Node
+node_modules/
+npm-debug.log*
+yarn-*.log
+# package-lock.json
+
+# Env
+.env
+.env.*
+
+# Logs & output
+*.log
+*.out
+*.err
+logs/
+coverage/
+dist/
+build/
+
+# CDK
+cdk.out/
+cdk.context.json
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+ec2-keypair.pem
+test-api.sh
