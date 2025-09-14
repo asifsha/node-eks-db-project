@@ -34,6 +34,9 @@ jobs:
           docker tag node-api:latest $ECR_REPO:latest
           docker push $ECR_REPO:latest
 
+      - name: Debug clusters
+        run: aws eks list-clusters --region ap-southeast-2
+
       - name: Update kubeconfig
         run: aws eks update-kubeconfig --name $(aws eks list-clusters --region ap-southeast-2 --query "clusters[0]" --output text) --region ap-southeast-2
 
