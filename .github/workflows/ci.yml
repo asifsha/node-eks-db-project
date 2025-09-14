@@ -46,3 +46,15 @@ jobs:
 
       - name: Apply service
         run: kubectl apply -f k8s/service.yaml
+
+      - name: Wait for LoadBalancer external IP
+        id: get-lb
+        run: |
+          echo "⏳ Waiting for external IP..."
+          for i in {1..20}; do
+            EXTERNAL_IP=$(kubectl get svc node-api -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            if [ -n "$EXTERNAL_IP" ]; then
+              echo "ServiceEndpoint=http://$EXTERNAL_IP" >> $GITHUB_ENV
+              echo "✅ Found LB endpoint: http://$EXTERNAL_IP"
+              exit 0
+            fi

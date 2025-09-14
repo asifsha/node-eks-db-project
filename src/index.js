@@ -1,6 +1,10 @@
 const express = require('express');
 
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // list items
 app.get('/items', async (req, res) => {
     try {
