@@ -59,14 +59,28 @@ class InfraStack extends cdk.Stack {
             apiVersion: 'v1',
             kind: 'Service',
             metadata: { name: 'node-api-svc' },
-            spec: { type: 'NodePort', selector: { app: 'node-api' }, ports: [{ port: 3000, targetPort: 3000 }] }
+            spec: {
+                type: 'LoadBalancer',
+                selector: { app: 'node-api' },
+                ports: [
+                    { port: 80, targetPort: 3000 } // Public port 80 -> container port 3000
+                ]
+            }
         };
 
-        cluster.addManifest('AppService', svc);
+        const svcManifest = cluster.addManifest('AppService', svc);
 
         new cdk.CfnOutput(this, 'EcrRepoUri', { value: repo.repositoryUri });
         new cdk.CfnOutput(this, 'ClusterName', { value: cluster.clusterName });
         new cdk.CfnOutput(this, 'TableName', { value: table.tableName });
+
+        // Output LoadBalancer DNS once available
+        new cdk.CfnOutput(this, 'ServiceEndpoint', {
+            value: cdk.Fn.join('', [
+                'http://',
+                svcManifest.getAtt('status.loadBalancer.ingress.0.hostname')
+            ])
+        });
     }
 }
 
