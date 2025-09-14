@@ -19,7 +19,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::412381746256:role/githubAccessECRECSRole # optional
+          role-to-assume: arn:aws:iam::412381746256:role/githubAccessECRECSRole
           aws-region: ap-southeast-2
 
       - name: Login to ECR
@@ -47,14 +47,21 @@ jobs:
       - name: Apply service
         run: kubectl apply -f k8s/service.yaml
 
-      - name: Wait for LoadBalancer external IP
-        id: get-lb
+      - name: Wait for LoadBalancer
         run: |
-          echo "⏳ Waiting for external IP..."
-          for i in {1..20}; do
-            EXTERNAL_IP=$(kubectl get svc node-api -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+          echo "Waiting for LoadBalancer external IP..."
+          for i in {1..30}; do
+            EXTERNAL_IP=$(kubectl get svc node-api-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true)
             if [ -n "$EXTERNAL_IP" ]; then
-              echo "ServiceEndpoint=http://$EXTERNAL_IP" >> $GITHUB_ENV
-              echo "✅ Found LB endpoint: http://$EXTERNAL_IP"
-              exit 0
+              echo "LoadBalancer hostname: $EXTERNAL_IP"
+              echo "API_ENDPOINT=http://$EXTERNAL_IP:3000" >> $GITHUB_ENV
+              break
             fi
+            echo "Retry $i: LoadBalancer not ready yet..."
+            sleep 10
+          done
+
+      - name: Health check API
+        run: |
+          echo "Checking API health..."
+          curl --fail $API_ENDPOINT/health
