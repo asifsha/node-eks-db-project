@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "Waiting for LoadBalancer external IP..."
           for i in {1..10}; do
-            EXTERNAL_IP=$(kubectl get svc node-api-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true)
+            EXTERNAL_IP=$(kubectl get svc node-api -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true)
             if [ -n "$EXTERNAL_IP" ]; then
               echo "LoadBalancer hostname: $EXTERNAL_IP"
               echo "API_ENDPOINT=http://$EXTERNAL_IP:3000" >> $GITHUB_ENV
