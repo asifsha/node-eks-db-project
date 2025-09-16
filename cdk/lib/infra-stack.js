@@ -11,7 +11,34 @@ class InfraStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
 
-        const vpc = new ec2.Vpc(this, 'Vpc', { maxAzs: 2 });
+
+        // VPC with subnet tagging for EKS load balancers
+        const vpc = new ec2.Vpc(this, 'Vpc', {
+            maxAzs: 2,
+            subnetConfiguration: [
+                {
+                    cidrMask: 24,
+                    name: 'PublicSubnet',
+                    subnetType: ec2.SubnetType.PUBLIC,
+                },
+                {
+                    cidrMask: 24,
+                    name: 'PrivateSubnet',
+                    subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+                }
+            ]
+        });
+
+        // Tag subnets for ELB usage
+        vpc.publicSubnets.forEach((subnet, i) => {
+            cdk.Tags.of(subnet).add('kubernetes.io/role/elb', '1');
+            cdk.Tags.of(subnet).add(`kubernetes.io/cluster/${id}`, 'owned');
+        });
+
+        vpc.privateSubnets.forEach((subnet, i) => {
+            cdk.Tags.of(subnet).add('kubernetes.io/role/internal-elb', '1');
+            cdk.Tags.of(subnet).add(`kubernetes.io/cluster/${id}`, 'owned');
+        });
 
         // ECR repo for the app image
         const repo = new ecr.Repository(this, 'EcrRepo', {
