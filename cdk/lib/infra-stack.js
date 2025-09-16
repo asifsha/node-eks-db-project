@@ -32,6 +32,18 @@ class InfraStack extends cdk.Stack {
             version: eks.KubernetesVersion.V1_30,
         });
 
+        cluster.awsAuth.addMastersRole(
+            iam.Role.fromRoleArn(this, 'GitHubActionsRole',
+                'arn:aws:iam::412381746256:role/githubAccessECRECSRole'
+            )
+        );
+
+        cluster.awsAuth.addMastersRole(
+            iam.Role.fromRoleArn(this, 'GitHubActionsRole',
+                'arn:aws:iam::412381746256:user/devcli'
+            )
+        );
+
         // Grant nodes access to read/write Dynamo and pull from ECR
         repo.grantPull(cluster.defaultNodegroup?.role || cluster.defaultCapacity?.role);
         table.grantReadWriteData(cluster.defaultNodegroup?.role || cluster.defaultCapacity?.role);
