@@ -1,4 +1,9 @@
 const express = require('express');
+const { v4: uuidv4 } = require('uuid');
+const { getItem, listItems, putItem, updateItem, deleteItem } = require("./dynamo");
+
+const app = express();
+app.use(express.json());
 
 
 app.get('/health', (req, res) => {
