@@ -32,12 +32,12 @@ class InfraStack extends cdk.Stack {
         // Tag subnets for ELB usage
         vpc.publicSubnets.forEach((subnet, i) => {
             cdk.Tags.of(subnet).add('kubernetes.io/role/elb', '1');
-            cdk.Tags.of(subnet).add(`kubernetes.io/cluster/${id}`, 'owned');
+            cdk.Tags.of(subnet).add(`kubernetes.io/cluster/${cluster.clusterName}`, 'owned');
         });
 
         vpc.privateSubnets.forEach((subnet, i) => {
             cdk.Tags.of(subnet).add('kubernetes.io/role/internal-elb', '1');
-            cdk.Tags.of(subnet).add(`kubernetes.io/cluster/${id}`, 'owned');
+            cdk.Tags.of(subnet).add(`kubernetes.io/cluster/${cluster.clusterName}`, 'owned');
         });
 
         // ECR repo for the app image
