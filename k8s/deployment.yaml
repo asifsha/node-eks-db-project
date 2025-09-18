@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: node-api
-        image: 593793022168.dkr.ecr.ap-southeast-2.amazonaws.com/node-api:latest
+        image: 412381746256.dkr.ecr.ap-southeast-2.amazonaws.com/node-api:latest
         ports:
         - containerPort: 3000
         env:
