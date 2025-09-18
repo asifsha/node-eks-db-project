@@ -4,6 +4,8 @@ metadata:
   name: node-api
   labels:
     app: node-api
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
 spec:
   type: LoadBalancer
   selector:
