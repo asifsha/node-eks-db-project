@@ -98,7 +98,7 @@ class InfraStack extends cdk.Stack {
     const svc = {
       apiVersion: 'v1',
       kind: 'Service',
-      metadata: { name: 'node-api-svc' },
+      metadata: { name: 'node-api' },
       spec: {
         type: 'LoadBalancer',
         selector: { app: 'node-api' },
