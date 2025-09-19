@@ -371,7 +371,7 @@ class InfraStack extends cdk.Stack {
     const svc = {
       apiVersion: 'v1',
       kind: 'Service',
-      metadata: { name: 'node-api-svc' },
+      metadata: { name: 'node-api' },
       spec: { type: 'NodePort', selector: { app: 'node-api' }, ports: [{ port: 3000, targetPort: 3000 }] }
     };
 
