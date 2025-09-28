@@ -35,7 +35,33 @@ class InfraStack extends cdk.Stack {
         const cluster = new eks.Cluster(this, 'EksCluster', {
             vpc,
             version: eks.KubernetesVersion.V1_30,
-            defaultCapacity: 2
+            defaultCapacity: 0, // disable default so we can control nodegroup
+            vpcSubnets: [{ subnetType: ec2.SubnetType.PUBLIC }]
+        });
+
+        // Add managed node group with public IPs
+        cluster.addNodegroupCapacity('PublicNodeGroup', {
+            desiredSize: 2,
+            subnets: { subnetType: ec2.SubnetType.PUBLIC },
+            instanceTypes: [new ec2.InstanceType('t3.medium')],
+            diskSize: 20,
+            nodegroupName: 'public-ng',
+            minSize: 2,
+            maxSize: 3,
+            // THIS is critical
+            launchTemplateSpec: {
+                id: new ec2.CfnLaunchTemplate(this, 'PublicLaunchTemplate', {
+                    launchTemplateData: {
+                        networkInterfaces: [
+                            {
+                                deviceIndex: 0,
+                                associatePublicIpAddress: true // ✅ Force public IPs
+                            }
+                        ]
+                    }
+                }).ref,
+                version: '$Latest'
+            }
         });
 
         // Tag subnets for ELB usage
