@@ -65,7 +65,7 @@ class InfraStack extends cdk.Stack {
         repo.grantPull(cluster.defaultNodegroup?.role || cluster.defaultCapacity?.role);
         table.grantReadWriteData(cluster.defaultNodegroup?.role || cluster.defaultCapacity?.role);
 
-        // Apply k8s manifests (deployment + service)
+        // Apply k8s Deployment manifest
         const manifestDeployment = {
             apiVersion: 'apps/v1',
             kind: 'Deployment',
@@ -93,8 +93,10 @@ class InfraStack extends cdk.Stack {
             }
         };
 
-        cluster.addManifest('AppDeployment', manifestDeployment);
+        const deployment = cluster.addManifest('AppDeployment', manifestDeployment);
+        deployment.node.addDependency(nodeApiSa); // 👈 ensure SA exists first
 
+        // Service manifest
         const svc = {
             apiVersion: 'v1',
             kind: 'Service',
@@ -107,7 +109,9 @@ class InfraStack extends cdk.Stack {
         };
 
         const svcManifest = cluster.addManifest('AppService', svc);
+        svcManifest.node.addDependency(deployment); // 👈 ensure pods before LB
 
+        // Allow Dev CLI role as admin
         cluster.awsAuth.addMastersRole(
             iam.Role.fromRoleArn(this, 'DevCliRole',
                 'arn:aws:iam::412381746256:role/DevCliRole'
