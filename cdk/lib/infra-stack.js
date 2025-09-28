@@ -10,13 +10,9 @@ class InfraStack extends cdk.Stack {
     constructor(scope, id, props) {
         super(scope, id, props);
 
-        // VPC with subnet tagging for EKS load balancers
-        const vpc = new ec2.Vpc(this, 'Vpc', {
-            maxAzs: 2,
-            subnetConfiguration: [
-                { cidrMask: 24, name: 'PublicSubnet', subnetType: ec2.SubnetType.PUBLIC },
-                { cidrMask: 24, name: 'PrivateSubnet', subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }
-            ]
+        // 🔹 Import an existing VPC by ID
+        const vpc = ec2.Vpc.fromLookup(this, 'ImportedVpc', {
+            vpcId: 'vpc-023a88be8f7751364', // <-- replace with your existing VPC ID
         });
 
         // DynamoDB
@@ -32,12 +28,17 @@ class InfraStack extends cdk.Stack {
         });
 
         // EKS Cluster
-        const cluster = new eks.Cluster(this, 'EksCluster', {
-            vpc,
-            version: eks.KubernetesVersion.V1_30,
-            defaultCapacity: 0, // disable default so we can control nodegroup
-            vpcSubnets: [{ subnetType: ec2.SubnetType.PUBLIC }]
+        const cluster = eks.Cluster.fromClusterAttributes(this, 'ImportedCluster', {
+            clusterName: 'funny-funk-sparrow',  // your cluster name
+            kubectlRoleArn: 'arn:aws:iam::412381746256:role/aws-service-role/eks.amazonaws.com/AWSServiceRoleForAmazonEKS', // role with cluster-admin
+            vpc, // the existing VPC (imported with ec2.Vpc.fromLookup)
+            openIdConnectProvider: eks.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+                this,
+                'OidcProvider',
+                'arn:aws:iam::<account-id>:oidc-provider/oidc.eks.<region>.amazonaws.com/id/<oidc-id>'
+            )
         });
+
 
         // Add managed node group with public IPs
         cluster.addNodegroupCapacity('PublicNodeGroup', {
